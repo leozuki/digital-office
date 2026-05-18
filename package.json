@@ -6,7 +6,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "npm install --prefix backend --no-optional && npm install --prefix frontend && npm run build --prefix frontend",
+    "build": "npm install --prefix backend --no-optional --omit=dev && npm install --prefix frontend --include=dev && npm run build --prefix frontend",
     "start": "node backend/server.js",
     "dev": "npm run dev --prefix backend"
   }
