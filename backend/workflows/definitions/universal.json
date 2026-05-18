@@ -1,0 +1,36 @@
+{
+  "id": "universal-assistant",
+  "name": "Universal Executive Assistant",
+  "description": "Workflow đa năng: Tự động phân tích, nghiên cứu chuyên sâu, viết code và lập kế hoạch đa nền tảng.",
+  "icon": "🧠",
+  "steps": [
+    {
+      "id": "deep_analysis",
+      "agent": "planner",
+      "action": "comprehensive_breakdown",
+      "instruction": "Phân tích yêu cầu từ nhiều góc độ: Kỹ thuật, Kinh doanh, và Nội dung."
+    },
+    {
+      "id": "research_and_solve",
+      "agent": "worker",
+      "action": "execute_complex_tasks",
+      "capabilities": ["web_search", "code_generation", "content_creation"],
+      "instruction": "Thực hiện các tác vụ khó nhất, bao gồm viết code hoặc nghiên cứu dữ liệu."
+    },
+    {
+      "id": "integration",
+      "agent": "manager",
+      "action": "cross_platform_deploy",
+      "connectors": ["wordpress", "file_system", "brain"],
+      "instruction": "Đưa kết quả vào các hệ thống tương ứng (đăng blog, lưu file, hoặc cập nhật Brain)."
+    },
+    {
+      "id": "quality_assurance",
+      "agent": "reviewer",
+      "action": "final_signoff",
+      "instruction": "Kiểm tra toàn bộ tính logic và độ chính xác của các kết quả đầu ra."
+    }
+  ],
+  "autonomous": true,
+  "tags": ["productivity", "all-in-one", "advanced"]
+}

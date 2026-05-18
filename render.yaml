@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: digital-office
+    env: node
+    region: singapore  # Gần Việt Nam nhất
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BACKEND_PORT
+        value: 10000  # Render yêu cầu port 10000 (hoặc dùng $PORT)
+      - key: GEMINI_API_KEY
+        sync: false   # Điền thủ công trong Render dashboard
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ADMIN_PASSWORD
+        generateValue: true  # Render tự tạo password ngẫu nhiên
+      - key: CORS_ORIGINS
+        sync: false   # Điền domain Render của bạn sau khi deploy
+      - key: PLANNER_RUNNER
+        value: gemini:gemini-flash-latest
+      - key: MANAGER_RUNNER
+        value: gemini:gemini-flash-latest
+      - key: WORKER_RUNNER
+        value: gemini:gemini-flash-latest
+      - key: REVIEWER_RUNNER
+        value: gemini:gemini-flash-latest

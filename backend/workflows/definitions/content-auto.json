@@ -1,0 +1,28 @@
+{
+  "id": "content-auto-loop",
+  "name": "Autonomous Content Hub",
+  "description": "Nghiên cứu từ khóa, viết bài, tối ưu SEO và tự động đăng WordPress",
+  "icon": "✍️",
+  "steps": [
+    {
+      "id": "research",
+      "agent": "planner",
+      "action": "research_trending_topics",
+      "context": "brain.seo_learnings"
+    },
+    {
+      "id": "write",
+      "agent": "worker",
+      "action": "write_blog_post",
+      "tools": ["wordpress_formatter"]
+    },
+    {
+      "id": "publish",
+      "agent": "manager",
+      "action": "publish_to_platform",
+      "connector": "wordpress"
+    }
+  ],
+  "auto_next_cycle": true,
+  "tags": ["marketing", "automation", "blog"]
+}

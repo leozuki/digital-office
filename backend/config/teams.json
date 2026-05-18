@@ -1,0 +1,71 @@
+[
+  {
+    "id": "frontend",
+    "name": "Frontend Team",
+    "icon": "🎨",
+    "color": "#6c63ff",
+    "active": true,
+    "description": "Specializes in building modern, responsive user interfaces using React, Vue, and vanilla HTML/CSS/JS. Focuses on animations, interactions, accessibility, and pixel-perfect design implementation.",
+    "skills": ["React", "Vue", "TypeScript", "CSS Animations", "Tailwind", "Figma", "A11y", "Performance"],
+    "instructions": "Assign tasks involving UI components, landing pages, dashboards, animation, CSS styling, and frontend logic. Always output complete, runnable HTML/JS/CSS files.",
+    "members": [
+      { "id": "alex",  "name": "Alex",  "role": "React & TypeScript Specialist",  "avatar": "👨‍💻" },
+      { "id": "sam",   "name": "Sam",   "role": "CSS Animations & Design Systems",  "avatar": "👩‍🎨" }
+    ]
+  },
+  {
+    "id": "backend",
+    "name": "Backend Team",
+    "icon": "⚙️",
+    "color": "#00d2ff",
+    "active": true,
+    "description": "Builds robust server-side systems, REST APIs, databases, microservices, and DevOps pipelines. Expert in Node.js, Python, PostgreSQL, Docker, and cloud infrastructure.",
+    "skills": ["Node.js", "Python", "PostgreSQL", "REST API", "Docker", "Redis", "Auth/JWT", "CI/CD"],
+    "instructions": "Assign tasks involving API design, database schema, authentication, server logic, performance optimization, and infrastructure. Always include complete working code with error handling.",
+    "members": [
+      { "id": "jordan", "name": "Jordan", "role": "Node.js & API Architecture",     "avatar": "👨‍💼" },
+      { "id": "casey",  "name": "Casey",  "role": "Database & Systems Engineering",  "avatar": "👩‍💻" }
+    ]
+  },
+  {
+    "id": "content",
+    "name": "Content Team",
+    "icon": "✍️",
+    "color": "#00e676",
+    "active": true,
+    "description": "Creates high-quality written content including technical documentation, SEO blog posts, marketing copy, social media content, and product narratives in both English and Vietnamese.",
+    "skills": ["Technical Writing", "SEO", "Copywriting", "Blog Posts", "Email Marketing", "Vietnamese", "UX Writing"],
+    "instructions": "Assign tasks involving documentation, articles, blog posts, social content, email templates, and product descriptions. Output in Markdown format unless otherwise specified.",
+    "members": [
+      { "id": "riley",  "name": "Riley",  "role": "Technical Writing & Docs",  "avatar": "📝" },
+      { "id": "morgan", "name": "Morgan", "role": "Marketing Copy & SEO",      "avatar": "📢" }
+    ]
+  },
+  {
+    "id": "design",
+    "name": "Design Team",
+    "icon": "🖌️",
+    "color": "#ff6b9d",
+    "active": true,
+    "description": "Creates visual specifications, design systems, UI/UX wireframes, brand assets, and interactive prototypes. Delivers detailed design specs that developers can implement directly.",
+    "skills": ["UI/UX", "Figma", "Brand Identity", "Design Systems", "Wireframing", "Color Theory", "SVG", "Motion Design"],
+    "instructions": "Assign tasks involving visual design, UI specifications, color palettes, component libraries, branding, and style guides. Output detailed visual specs, SVG assets, or CSS design tokens.",
+    "members": [
+      { "id": "quinn", "name": "Quinn", "role": "UI/UX & Interaction Design",  "avatar": "🎨" },
+      { "id": "drew",  "name": "Drew",  "role": "Brand & Visual Identity",     "avatar": "🖼️" }
+    ]
+  },
+  {
+    "id": "qa",
+    "name": "QA Team",
+    "icon": "🔍",
+    "color": "#ffab40",
+    "active": true,
+    "description": "Performs thorough quality assurance including code review, test case writing, performance auditing, security checks, and accessibility testing. Ensures all deliverables meet production standards.",
+    "skills": ["Testing", "Code Review", "Performance Audit", "Security", "A11y Testing", "Jest", "Playwright", "Documentation"],
+    "instructions": "Assign tasks involving testing strategies, code audits, performance reports, security checks, and proofreading. Output checklists, audit reports, or test suites.",
+    "members": [
+      { "id": "taylor", "name": "Taylor", "role": "QA Engineering & Auditing", "avatar": "🕵️" }
+    ]
+  }
+]
