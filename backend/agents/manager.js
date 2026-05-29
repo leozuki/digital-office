@@ -90,6 +90,48 @@ Format JSON bắt buộc:
 }`;
 }
 
+const managerSchema = {
+  type: "OBJECT",
+  properties: {
+    assignments: {
+      type: "ARRAY",
+      description: "Danh sách các phân công công việc cụ thể cho từng task nhận được",
+      items: {
+        type: "OBJECT",
+        properties: {
+          task_title: {
+            type: "STRING",
+            description: "Tiêu đề task CHÍNH XÁC từ danh sách nhận được"
+          },
+          assigned_to: {
+            type: "STRING",
+            description: "Tên cụ thể của thành viên trong team"
+          },
+          team: {
+            type: "STRING",
+            description: "ID của team phụ trách task (ví dụ: content, backend, design, qa, frontend)"
+          },
+          reasoning: {
+            type: "STRING",
+            description: "Lý do chọn người này: kỹ năng phù hợp + phù hợp domain"
+          },
+          complexity: {
+            type: "STRING",
+            description: "Độ phức tạp: low | medium | high",
+            enum: ["low", "medium", "high"]
+          },
+          estimated_output: {
+            type: "STRING",
+            description: "Mô tả CHI TIẾT kết quả đầu ra dự kiến: định dạng, nội dung, cho dự án nào"
+          }
+        },
+        required: ["task_title", "assigned_to", "team", "reasoning", "complexity", "estimated_output"]
+      }
+    }
+  },
+  required: ["assignments"]
+};
+
 class ManagerAgent {
   constructor(provider) {
     this.provider = provider;
@@ -118,8 +160,17 @@ Trả về JSON hợp lệ duy nhất.`;
     const raw    = await this.provider.generate(systemPrompt, prompt, {
       temperature: agentCfg.temperature ?? 0.4,  // chặt hơn để không sáng tạo sai
       maxTokens:   agentCfg.maxTokens   ?? 3000,
+      responseMimeType: "application/json",
+      responseSchema: managerSchema,
     });
-    const result = extractJSON(raw);
+    
+    let result;
+    try {
+      result = JSON.parse(raw);
+    } catch (e) {
+      console.warn('[Manager] JSON.parse failed, falling back to extractJSON:', e.message);
+      result = extractJSON(raw);
+    }
 
     if (!Array.isArray(result.assignments)) {
       throw new Error('[Manager] Invalid assignments response');

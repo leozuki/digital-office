@@ -27,6 +27,10 @@ function emit(sessionId, taskId, agent, type, content, metadata, wsManager) {
   });
 }
 
+// ─── Context Cache Store ─────────────────────────────────────────────────────
+const pathStore = require('path');
+const folderCaches = new Map(); // docFolder -> { cacheName, expiresAt }
+
 // ─── Main orchestrator ────────────────────────────────────────────────────────
 async function process(sessionId, request, wsManager, options = {}) {
   const broadcast = (type, data) => wsManager.broadcast({ type, data });
@@ -51,12 +55,6 @@ async function process(sessionId, request, wsManager, options = {}) {
       }
     }
 
-    // Full context string to inject into planning
-    const contextBlock = docContext
-      ? `\n\n===== REFERENCE DOCUMENTS =====\n${docContext.slice(0, 12000)}\n===== END REFERENCE DOCUMENTS =====`
-      : '';
-    const enrichedRequest = request + contextBlock;
-
     // ── Phase 1: PLANNING ────────────────────────────────────────────────────
     db.updateSession(sessionId, 'planning');
     broadcast('session:updated', { id: sessionId, status: 'planning' });
@@ -66,8 +64,41 @@ async function process(sessionId, request, wsManager, options = {}) {
       `Received request: "${request}". Analyzing and decomposing into tasks…`, null, wsManager);
 
     let plan;
+    let cachedContentName = null;
+
+    // Check if we can use Context Caching (minimum size for Gemini caching is ~32k tokens, ~80k-100k chars)
+    if (docFolder && docContext.length > 80000 && planner.provider.createCache) {
+      const now = Date.now();
+      const existing = folderCaches.get(docFolder);
+      if (existing && existing.expiresAt > now) {
+        cachedContentName = existing.cacheName;
+        emit(sessionId, null, 'planner', 'thought',
+          `⚡ Context Caching: Reusing active cache for "${pathStore.basename(docFolder)}" to optimize latency and API usage.`, null, wsManager);
+      } else {
+        emit(sessionId, null, 'planner', 'thought',
+          `⚡ Context Caching: Creating new Gemini context cache for "${pathStore.basename(docFolder)}" (Large context: ${docContext.length} chars)…`, null, wsManager);
+        const cacheName = await planner.provider.createCache(docContext, 'doc-folder-' + pathStore.basename(docFolder).slice(0, 30), 1800);
+        if (cacheName) {
+          cachedContentName = cacheName;
+          folderCaches.set(docFolder, { cacheName, expiresAt: now + 1800 * 1000 });
+          emit(sessionId, null, 'planner', 'thought',
+            `⚡ Context Caching: Successfully cached. Cache expires in 30 minutes.`, null, wsManager);
+        }
+      }
+    }
+
     try {
-      plan = await planner.plan(enrichedRequest);
+      if (cachedContentName) {
+        // When using caching, prompt content is cached, so we only pass the short request
+        plan = await planner.plan(request, cachedContentName);
+      } else {
+        // Fallback: append document text directly to the prompt
+        const contextBlock = docContext
+          ? `\n\n===== REFERENCE DOCUMENTS =====\n${docContext.slice(0, 12000)}\n===== END REFERENCE DOCUMENTS =====`
+          : '';
+        const enrichedRequest = request + contextBlock;
+        plan = await planner.plan(enrichedRequest);
+      }
     } catch (err) {
       throw new Error(`Planning failed: ${err.message}`);
     }

@@ -85,13 +85,59 @@ Format JSON bắt buộc:
 }`;
 }
 
+const plannerSchema = {
+  type: "OBJECT",
+  properties: {
+    domain: {
+      type: "STRING",
+      description: "Lĩnh vực chính của yêu cầu: seo | marketing | tech | design | research | strategy",
+      enum: ["seo", "marketing", "tech", "design", "research", "strategy"]
+    },
+    subject: {
+      type: "STRING",
+      description: "Đối tượng chính của yêu cầu (ví dụ: 'website bán giày ABC', 'ứng dụng ZaloCRM')"
+    },
+    analysis: {
+      type: "STRING",
+      description: "Phân tích ngắn gọn: người dùng cần gì, cho dự án/sản phẩm nào"
+    },
+    tasks: {
+      type: "ARRAY",
+      description: "Danh sách các task cụ thể cần làm để phục vụ yêu cầu (tối đa 4 task)",
+      items: {
+        type: "OBJECT",
+        properties: {
+          title: {
+            type: "STRING",
+            description: "Tiêu đề task ngắn gọn, cụ thể, có tên đối tượng"
+          },
+          description: {
+            type: "STRING",
+            description: "Mô tả chi tiết: cần làm gì, cho đối tượng nào, kết quả đầu ra là gì"
+          },
+          team: {
+            type: "STRING",
+            description: "Team phụ trách (ví dụ: content, backend, design, qa)"
+          },
+          priority: {
+            type: "INTEGER",
+            description: "Thứ tự ưu tiên của task (1, 2, 3...)"
+          }
+        },
+        required: ["title", "description", "team", "priority"]
+      }
+    }
+  },
+  required: ["domain", "subject", "analysis", "tasks"]
+};
+
 class PlannerAgent {
   constructor(provider) {
     this.provider = provider;
     this.role     = 'planner';
   }
 
-  async plan(request) {
+  async plan(request, cachedContent = null) {
     const teams  = loadActiveTeams();
     const cfg    = loadAgentConfig();
     const system = buildSystemPrompt(teams);
@@ -110,8 +156,18 @@ Trả về JSON hợp lệ duy nhất.`;
     const raw    = await this.provider.generate(system, prompt, {
       temperature: cfg.temperature ?? 0.4,   // thấp hơn để logic chặt hơn
       maxTokens:   cfg.maxTokens   ?? 4096,
+      responseMimeType: "application/json",
+      responseSchema: plannerSchema,
+      cachedContent,
     });
-    const result = extractJSON(raw);
+    
+    let result;
+    try {
+      result = JSON.parse(raw);
+    } catch (e) {
+      console.warn('[Planner] JSON.parse failed, falling back to extractJSON:', e.message);
+      result = extractJSON(raw);
+    }
 
     if (!Array.isArray(result.tasks) || result.tasks.length === 0) {
       throw new Error('[Planner] No tasks returned by model');

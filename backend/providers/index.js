@@ -56,8 +56,8 @@ function createProvider(runnerStr) {
 
 const AGENT_RUNNERS = {
   planner:  process.env.PLANNER_RUNNER  || 'anthropic:claude-3-5-sonnet-20241022',
-  manager:  process.env.MANAGER_RUNNER  || 'gemini:gemini-2.0-flash',
-  worker:   process.env.WORKER_RUNNER   || 'gemini:gemini-2.0-flash',
+  manager:  process.env.MANAGER_RUNNER  || 'gemini:gemini-3.5-flash',
+  worker:   process.env.WORKER_RUNNER   || 'gemini:gemini-3.5-flash',
   reviewer: process.env.REVIEWER_RUNNER || 'anthropic:claude-3-5-sonnet-20241022',
 };
 

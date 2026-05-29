@@ -304,11 +304,11 @@ app.put('/api/teams', authMiddleware, (req, res) => {
 // ─── Runners Config ───────────────────────────────────────────────────────────
 app.get('/api/runners', (req, res) => {
   res.json({
-    planner:  process.env.PLANNER_RUNNER  || 'gemini:gemini-flash-latest',
-    manager:  process.env.MANAGER_RUNNER  || 'gemini:gemini-flash-latest',
-    worker:   process.env.WORKER_RUNNER   || 'gemini:gemini-flash-latest',
-    reviewer: process.env.REVIEWER_RUNNER || 'gemini:gemini-flash-latest',
-    available: ['gemini:gemini-flash-latest','gemini:gemini-2.0-flash','anthropic:claude-3-5-sonnet-20241022','ollama:llama3'],
+    planner:  process.env.PLANNER_RUNNER  || 'gemini:gemini-3.5-flash',
+    manager:  process.env.MANAGER_RUNNER  || 'gemini:gemini-3.5-flash',
+    worker:   process.env.WORKER_RUNNER   || 'gemini:gemini-3.5-flash',
+    reviewer: process.env.REVIEWER_RUNNER || 'gemini:gemini-3.5-flash',
+    available: ['gemini:gemini-3.5-flash','gemini:gemini-2.0-flash','anthropic:claude-3-5-sonnet-20241022','ollama:llama3'],
   });
 });
 app.put('/api/runners', authMiddleware, (req, res) => {
@@ -380,8 +380,8 @@ app.get('/api/config', (req, res) => {
   res.json({
     agents: {
       planner:  process.env.PLANNER_RUNNER  || 'anthropic:claude-3-5-sonnet-20241022',
-      manager:  process.env.MANAGER_RUNNER  || 'gemini:gemini-2.0-flash',
-      worker:   process.env.WORKER_RUNNER   || 'gemini:gemini-2.0-flash',
+      manager:  process.env.MANAGER_RUNNER  || 'gemini:gemini-3.5-flash',
+      worker:   process.env.WORKER_RUNNER   || 'gemini:gemini-3.5-flash',
       reviewer: process.env.REVIEWER_RUNNER || 'anthropic:claude-3-5-sonnet-20241022',
     },
     hasAnthropic: !!process.env.ANTHROPIC_API_KEY,

@@ -49,6 +49,40 @@ Rules:
 - Always be professional and constructive.`;
 }
 
+const reviewerSchema = {
+  type: "OBJECT",
+  properties: {
+    decision: {
+      type: "STRING",
+      description: "Quyết định phê duyệt: approved | rejected",
+      enum: ["approved", "rejected"]
+    },
+    score: {
+      type: "NUMBER",
+      description: "Điểm đánh giá chất lượng (từ 1.0 đến 10.0)"
+    },
+    feedback: {
+      type: "STRING",
+      description: "Đánh giá tổng quan về chất lượng sản phẩm bằng tiếng Việt"
+    },
+    strengths: {
+      type: "ARRAY",
+      description: "Các điểm mạnh, điểm hoàn thành xuất sắc",
+      items: { type: "STRING" }
+    },
+    issues: {
+      type: "ARRAY",
+      description: "Các vấn đề còn tồn đọng cần khắc phục",
+      items: { type: "STRING" }
+    },
+    revision_instruction: {
+      type: "STRING",
+      description: "Hướng dẫn sửa lỗi chi tiết từng bước cho Worker (nếu rejected)"
+    }
+  },
+  required: ["decision", "score", "feedback", "strengths", "issues", "revision_instruction"]
+};
+
 class ReviewerAgent {
   constructor(provider) {
     this.provider = provider;
@@ -81,8 +115,17 @@ Evaluate this output thoroughly. Does it fully satisfy the task? Return only val
     const raw    = await this.provider.generate(buildSystemPrompt(cfg), prompt, {
       temperature: cfg.temperature ?? 0.4,
       maxTokens:   cfg.maxTokens   ?? 2048,
+      responseMimeType: "application/json",
+      responseSchema: reviewerSchema,
     });
-    const result = extractJSON(raw);
+    
+    let result;
+    try {
+      result = JSON.parse(raw);
+    } catch (e) {
+      console.warn('[Reviewer] JSON.parse failed, falling back to extractJSON:', e.message);
+      result = extractJSON(raw);
+    }
 
     result.decision             = result.decision || 'approved';
     result.score                = Number(result.score) || 7.0;
