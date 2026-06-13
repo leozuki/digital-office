@@ -24,6 +24,13 @@ function parseRunner(runnerStr) {
 }
 
 /**
+ * Kiểm tra key có hợp lệ (không phải placeholder)
+ */
+function isValidKey(key) {
+  return key && typeof key === 'string' && !key.includes('your_') && key.length > 10;
+}
+
+/**
  * Create a provider instance from a runner string.
  * Falls back gracefully if an API key is missing.
  */
@@ -33,8 +40,14 @@ function createProvider(runnerStr) {
   try {
     switch (provider) {
       case 'anthropic':
+        if (!isValidKey(process.env.ANTHROPIC_API_KEY)) {
+          throw new Error('ANTHROPIC_API_KEY không hợp lệ hoặc là placeholder');
+        }
         return new AnthropicProvider(process.env.ANTHROPIC_API_KEY, model);
       case 'gemini':
+        if (!isValidKey(process.env.GEMINI_API_KEY)) {
+          throw new Error('GEMINI_API_KEY không hợp lệ hoặc là placeholder');
+        }
         return new GeminiProvider(process.env.GEMINI_API_KEY, model);
       case 'ollama':
         return new OllamaProvider(process.env.OLLAMA_BASE_URL, model);
@@ -42,22 +55,25 @@ function createProvider(runnerStr) {
         throw new Error(`Unknown provider: "${provider}"`);
     }
   } catch (err) {
-    // Auto-fallback: if anthropic fails, try gemini, then ollama
+    // Auto-fallback: nếu provider chính thất bại, thử các provider khác có key hợp lệ
     console.warn(`[Provider] ${err.message} — attempting fallback…`);
-    if (provider !== 'gemini' && process.env.GEMINI_API_KEY) {
+    if (provider !== 'gemini' && isValidKey(process.env.GEMINI_API_KEY)) {
       return new GeminiProvider(process.env.GEMINI_API_KEY);
     }
-    if (provider !== 'ollama') {
+    if (provider !== 'anthropic' && isValidKey(process.env.ANTHROPIC_API_KEY)) {
+      return new AnthropicProvider(process.env.ANTHROPIC_API_KEY);
+    }
+    if (provider !== 'ollama' && process.env.OLLAMA_BASE_URL) {
       return new OllamaProvider();
     }
-    throw err;
+    throw new Error(`Không tìm thấy provider hợp lệ. Vui lòng set GEMINI_API_KEY, ANTHROPIC_API_KEY hoặc OLLAMA_BASE_URL.`);
   }
 }
 
 const AGENT_RUNNERS = {
   planner:  process.env.PLANNER_RUNNER  || 'anthropic:claude-3-5-sonnet-20241022',
-  manager:  process.env.MANAGER_RUNNER  || 'gemini:gemini-3.5-flash',
-  worker:   process.env.WORKER_RUNNER   || 'gemini:gemini-3.5-flash',
+  manager:  process.env.MANAGER_RUNNER  || 'gemini:gemini-1.5-flash',
+  worker:   process.env.WORKER_RUNNER   || 'gemini:gemini-1.5-flash',
   reviewer: process.env.REVIEWER_RUNNER || 'anthropic:claude-3-5-sonnet-20241022',
 };
 

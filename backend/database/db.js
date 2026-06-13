@@ -161,9 +161,9 @@ function deleteSession(id) {
     run(`DELETE FROM reviews      WHERE task_id  = ?`, [t.id]);
     run(`DELETE FROM task_outputs WHERE task_id  = ?`, [t.id]);
   });
-  run(`DELETE FROM tasks           WHERE session_id = ?`, [id]);
-  run(`DELETE FROM workflow_events  WHERE session_id = ?`, [id]);
-  run(`DELETE FROM sessions         WHERE id = ?`,         [id]);
+  run(`DELETE FROM tasks    WHERE session_id = ?`, [id]);
+  run(`DELETE FROM events   WHERE session_id = ?`, [id]);
+  run(`DELETE FROM sessions WHERE id = ?`,         [id]);
 }
 
 // ─── Tasks ────────────────────────────────────────────────────────────────────

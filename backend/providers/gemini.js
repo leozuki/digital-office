@@ -11,7 +11,7 @@ class GeminiProvider {
     if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
     this.apiKey = apiKey;
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = model || process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+    this.model = model || process.env.GEMINI_MODEL || 'gemini-1.5-flash';
     this.name  = `gemini:${this.model}`;
   }
 
