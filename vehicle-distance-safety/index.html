@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Đo khoảng cách an toàn giữa các xe</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>🚗 Khoảng cách an toàn</h1>
+    <button id="settingsBtn" class="icon-btn" title="Cài đặt & Hiệu chuẩn">⚙️</button>
+  </header>
+
+  <main class="stage">
+    <video id="video" autoplay muted playsinline></video>
+    <canvas id="overlay"></canvas>
+
+    <div id="statusBanner" class="status-banner status-unknown">
+      <span id="statusText">Đang khởi động camera...</span>
+    </div>
+
+    <div class="hud">
+      <div class="hud-card">
+        <div class="hud-label">Tốc độ</div>
+        <div class="hud-value"><span id="speedValue">0</span> km/h</div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-label">Khoảng cách đo được</div>
+        <div class="hud-value"><span id="distValue">--</span> m</div>
+      </div>
+      <div class="hud-card">
+        <div class="hud-label">Khoảng cách an toàn tối thiểu</div>
+        <div class="hud-value"><span id="safeDistValue">--</span> m</div>
+      </div>
+    </div>
+  </main>
+
+  <aside id="settingsPanel" class="settings-panel hidden">
+    <div class="settings-header">
+      <h2>Cài đặt & Hiệu chuẩn</h2>
+      <button id="closeSettings" class="icon-btn">✕</button>
+    </div>
+
+    <section>
+      <h3>1. Nguồn tốc độ</h3>
+      <label class="radio-row">
+        <input type="radio" name="speedSource" value="gps" checked />
+        Dùng GPS (tự động, cần cho phép vị trí)
+      </label>
+      <label class="radio-row">
+        <input type="radio" name="speedSource" value="manual" />
+        Nhập tay
+      </label>
+      <div id="manualSpeedRow" class="manual-speed hidden">
+        <input type="range" id="manualSpeedSlider" min="0" max="140" value="50" />
+        <span id="manualSpeedLabel">50 km/h</span>
+      </div>
+    </section>
+
+    <section>
+      <h3>2. Hiệu chuẩn camera (khuyến nghị)</h3>
+      <p class="hint">
+        Đỗ xe cách một ô tô phía trước một khoảng cách đã biết (ví dụ 10m, đo bằng thước dây/laser),
+        đảm bảo camera nhận diện được xe đó (khung màu xanh), rồi nhập khoảng cách thực tế và bấm hiệu chuẩn.
+      </p>
+      <div class="calib-row">
+        <input type="number" id="calibDistance" placeholder="Khoảng cách thực tế (m)" min="1" step="0.1" />
+        <button id="calibrateBtn">Hiệu chuẩn</button>
+      </div>
+      <div class="calib-row">
+        <label for="carWidthInput">Chiều rộng xe tham chiếu (m)</label>
+        <input type="number" id="carWidthInput" value="1.8" min="1" max="2.5" step="0.05" />
+      </div>
+      <p id="calibStatus" class="hint"></p>
+    </section>
+
+    <section>
+      <h3>3. Quy tắc khoảng cách an toàn (Thông tư 31/2019/TT-BGTVT)</h3>
+      <table class="rule-table">
+        <thead><tr><th>Tốc độ</th><th>Khoảng cách tối thiểu</th></tr></thead>
+        <tbody>
+          <tr><td>&le; 60 km/h</td><td>Theo quy tắc 2 giây (chủ động giữ khoảng cách)</td></tr>
+          <tr><td>60 – 80 km/h</td><td>55 m</td></tr>
+          <tr><td>80 – 100 km/h</td><td>70 m</td></tr>
+          <tr><td>100 – 120 km/h</td><td>100 m</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </aside>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

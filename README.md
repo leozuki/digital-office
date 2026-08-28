@@ -4,6 +4,14 @@ An AI-powered digital office where structured agents collaborate in a strict wor
 
 ---
 
+## 🚗 Also in this repo: Vehicle Distance Safety App
+
+A standalone, camera-based web app that measures the distance to the car ahead
+and warns when it's below the minimum safe following distance for the current
+speed. See [`vehicle-distance-safety/README.md`](./vehicle-distance-safety/README.md).
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Configure API Keys
