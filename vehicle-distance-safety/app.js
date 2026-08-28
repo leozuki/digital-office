@@ -74,6 +74,9 @@ async function initCamera() {
 
 async function initModel() {
   setStatus("unknown", "Đang tải mô hình nhận diện...");
+  if (typeof cocoSsd === "undefined") {
+    throw new Error("coco-ssd script not loaded");
+  }
   state.model = await cocoSsd.load({ base: "lite_mobilenet_v2" });
 }
 
@@ -251,7 +254,12 @@ async function main() {
     setStatus("danger", "Không thể truy cập camera. Hãy cấp quyền camera cho trình duyệt.");
     return;
   }
-  await initModel();
+  try {
+    await initModel();
+  } catch (err) {
+    setStatus("danger", "Không tải được mô hình nhận diện. Kiểm tra kết nối mạng và tải lại trang.");
+    return;
+  }
   setStatus("unknown", "Sẵn sàng. Hiệu chuẩn để có kết quả chính xác.");
   requestAnimationFrame(detectLoop);
 }
