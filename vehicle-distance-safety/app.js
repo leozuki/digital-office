@@ -171,12 +171,24 @@ function drawDetections(detections, nearest) {
   });
 }
 
+function unlockAudio() {
+  // iOS Safari only allows creating/resuming an AudioContext inside a
+  // direct user-gesture handler (the "Bắt đầu" tap), so this must run
+  // there rather than lazily on the first warning beep.
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  } catch (e) {
+    /* Web Audio unavailable; visual warning still applies. */
+  }
+}
+
 function beepWarning() {
   const now = Date.now();
   if (now - state.lastWarnAt < 1500) return;
   state.lastWarnAt = now;
   try {
-    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (!audioCtx) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.frequency.value = 880;
@@ -244,16 +256,37 @@ function initSettingsPanel() {
 
 /* ---------- Boot ---------- */
 
-async function main() {
-  initSpeed();
-  initCalibration();
-  initSettingsPanel();
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  // Relative path: keeps it working when the app is served from a
+  // sub-path rather than the domain root.
+  navigator.serviceWorker.register("sw.js").catch(() => {
+    /* Offline app-shell caching is a nice-to-have, not required to run. */
+  });
+}
+
+async function startApp() {
+  const startOverlay = document.getElementById("startOverlay");
+  const startBtn = document.getElementById("startBtn");
+  startBtn.disabled = true;
+  startBtn.textContent = "Đang khởi động...";
+
+  // Must run inside this click handler: iOS Safari only grants a reliable
+  // camera prompt and allows creating/resuming an AudioContext when both
+  // happen synchronously-ish inside a direct user gesture.
+  unlockAudio();
+
   try {
     await initCamera();
   } catch (err) {
+    startBtn.disabled = false;
+    startBtn.textContent = "Thử lại";
     setStatus("danger", "Không thể truy cập camera. Hãy cấp quyền camera cho trình duyệt.");
     return;
   }
+
+  startOverlay.classList.add("hidden");
+
   try {
     await initModel();
   } catch (err) {
@@ -262,6 +295,16 @@ async function main() {
   }
   setStatus("unknown", "Sẵn sàng. Hiệu chuẩn để có kết quả chính xác.");
   requestAnimationFrame(detectLoop);
+}
+
+function main() {
+  initSpeed();
+  initCalibration();
+  initSettingsPanel();
+  registerServiceWorker();
+  // Not { once: true }: a failed camera permission prompt re-enables the
+  // button so the user can retry the gesture.
+  document.getElementById("startBtn").addEventListener("click", startApp);
 }
 
 main();

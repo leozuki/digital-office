@@ -51,6 +51,33 @@ python3 -m http.server 8080
 Sau đó mở `http://localhost:<port>` trên điện thoại/laptop có camera, cho phép
 quyền camera (và vị trí nếu muốn dùng tốc độ từ GPS).
 
+## Cài đặt trên iPhone (chạy như app, không cần App Store)
+
+Ứng dụng là một **Progressive Web App (PWA)** — không cần Xcode hay build
+native để dùng như một app trên iOS:
+
+1. Deploy thư mục `vehicle-distance-safety/` lên một host HTTPS bất kỳ (bắt
+   buộc HTTPS trừ khi test trên `localhost`) — ví dụ GitHub Pages, Vercel,
+   Netlify, hoặc `render.yaml` sẵn có trong repo.
+2. Mở URL đó bằng **Safari** trên iPhone (không phải Chrome — iOS chỉ cho
+   phép "Add to Home Screen" tạo app chuẩn PWA từ Safari).
+3. Bấm nút **Chia sẻ** (hình vuông có mũi tên) → **"Thêm vào MH chính"
+   (Add to Home Screen)**.
+4. Mở lại từ icon trên màn hình chính: app chạy toàn màn hình (không thanh
+   địa chỉ Safari), có icon riêng, và vẫn mở được khi mất mạng nhờ
+   service-worker cache phần giao diện (`sw.js`).
+5. Lần đầu mở, bấm nút **"Bắt đầu"** trên màn hình chờ — bước này bắt buộc
+   trên iOS vì Safari chỉ cấp quyền Camera và cho phép phát âm thanh cảnh
+   báo (Web Audio API) khi được kích hoạt trực tiếp từ một cú chạm của
+   người dùng, không thể tự động xin quyền khi trang vừa tải xong.
+
+**Về app native (App Store)**: repo này không thể build/test file `.ipa`
+vì cần Xcode chạy trên macOS (môi trường chạy phiên này là Linux, không có
+Xcode). Nếu sau này cần phân phối qua App Store, cách nhanh nhất là dùng
+[Capacitor](https://capacitorjs.com/) để bọc lại đúng 3 file tĩnh này
+(`npx cap add ios` rồi mở project trong Xcode trên máy Mac) — không cần
+viết lại logic, vì toàn bộ app hiện đã là HTML/CSS/JS thuần.
+
 ## Hiệu chuẩn (bắt buộc để có số đo chính xác)
 
 1. Mở ⚙️ **Cài đặt**.
@@ -78,7 +105,10 @@ quyền camera (và vị trí nếu muốn dùng tốc độ từ GPS).
 
 ```
 vehicle-distance-safety/
-├── index.html   # Giao diện: camera, overlay canvas, HUD, panel cài đặt
-├── app.js       # Nhận diện xe, ước lượng khoảng cách, quy tắc an toàn, cảnh báo
-└── style.css    # Giao diện tối (dark UI) tối ưu cho dùng ngoài trời/trong xe
+├── index.html            # Giao diện: màn hình bắt đầu, camera, overlay canvas, HUD, panel cài đặt
+├── app.js                # Nhận diện xe, ước lượng khoảng cách, quy tắc an toàn, cảnh báo
+├── style.css              # Giao diện tối (dark UI), có safe-area-inset cho tai thỏ/Dynamic Island
+├── manifest.webmanifest  # Khai báo PWA (tên, icon, chế độ standalone) để "Add to Home Screen"
+├── sw.js                 # Service worker cache phần giao diện tĩnh để mở được khi mất mạng
+└── icons/                # Icon app (favicon, apple-touch-icon, icon PWA 192/512)
 ```

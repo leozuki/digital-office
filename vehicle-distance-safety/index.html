@@ -2,11 +2,37 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>Đo khoảng cách an toàn giữa các xe</title>
+
+<!-- iOS: makes "Add to Home Screen" launch full-screen like a native app -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="KC An Toàn" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0b0f14" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png" />
+<link rel="manifest" href="manifest.webmanifest" />
+
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="startOverlay" class="start-overlay">
+    <div class="start-card">
+      <div class="start-icon">🚗</div>
+      <h2>Đo khoảng cách an toàn</h2>
+      <p>
+        Ứng dụng cần quyền truy cập <strong>Camera</strong> để nhận diện xe phía trước,
+        và quyền <strong>Vị trí</strong> nếu muốn tự động lấy tốc độ từ GPS.
+      </p>
+      <button id="startBtn">Bắt đầu</button>
+      <p class="start-hint">
+        Mẹo (iOS): bấm nút Chia sẻ trên Safari → "Thêm vào MH chính" để dùng như một app.
+      </p>
+    </div>
+  </div>
+
   <header class="topbar">
     <h1>🚗 Khoảng cách an toàn</h1>
     <button id="settingsBtn" class="icon-btn" title="Cài đặt & Hiệu chuẩn">⚙️</button>
