@@ -18,6 +18,9 @@ const state = {
   speedSource: "gps",
   model: null,
   lastWarnAt: 0,
+  showAllLabels: true,
+  lastLat: null,
+  lastLon: null,
 };
 
 const els = {
@@ -26,8 +29,13 @@ const els = {
   statusBanner: document.getElementById("statusBanner"),
   statusText: document.getElementById("statusText"),
   speedValue: document.getElementById("speedValue"),
-  distValue: document.getElementById("distValue"),
-  safeDistValue: document.getElementById("safeDistValue"),
+  primaryBadge: document.getElementById("primaryBadge"),
+  primaryDistValue: document.getElementById("primaryDistValue"),
+  primarySafeValue: document.getElementById("primarySafeValue"),
+  watermark: document.getElementById("watermark"),
+  snapshotBtn: document.getElementById("snapshotBtn"),
+  recordBtn: document.getElementById("recordBtn"),
+  detailToggleBtn: document.getElementById("detailToggleBtn"),
   settingsBtn: document.getElementById("settingsBtn"),
   settingsPanel: document.getElementById("settingsPanel"),
   closeSettings: document.getElementById("closeSettings"),
@@ -43,6 +51,87 @@ const els = {
 const ctx = els.overlay.getContext("2d");
 let lastDetections = [];
 let audioCtx = null;
+
+/* ---------- Snapshot + trip recording (compositing video + boxes) ---------- */
+
+let compositeCanvas = null;
+let compositeCtx = null;
+let mediaRecorder = null;
+let recordChunks = [];
+let isRecording = false;
+
+function ensureCompositeCanvas() {
+  if (!compositeCanvas) {
+    compositeCanvas = document.createElement("canvas");
+    compositeCtx = compositeCanvas.getContext("2d");
+  }
+  compositeCanvas.width = els.overlay.width;
+  compositeCanvas.height = els.overlay.height;
+}
+
+function drawComposite() {
+  compositeCtx.drawImage(els.video, 0, 0, compositeCanvas.width, compositeCanvas.height);
+  compositeCtx.drawImage(els.overlay, 0, 0, compositeCanvas.width, compositeCanvas.height);
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+function takeSnapshot() {
+  if (!els.video.videoWidth) return;
+  ensureCompositeCanvas();
+  drawComposite();
+  compositeCanvas.toBlob((blob) => {
+    if (blob) downloadBlob(blob, `khoang-cach-${Date.now()}.png`);
+  }, "image/png");
+}
+
+function toggleRecording() {
+  if (isRecording) {
+    mediaRecorder.stop();
+    return;
+  }
+  if (!els.video.videoWidth) return;
+  ensureCompositeCanvas();
+  drawComposite();
+  const stream = compositeCanvas.captureStream(30);
+  recordChunks = [];
+  try {
+    mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp9" });
+  } catch (e) {
+    mediaRecorder = new MediaRecorder(stream);
+  }
+  mediaRecorder.ondataavailable = (e) => {
+    if (e.data && e.data.size) recordChunks.push(e.data);
+  };
+  mediaRecorder.onstop = () => {
+    isRecording = false;
+    els.recordBtn.classList.remove("recording");
+    if (recordChunks.length) {
+      downloadBlob(new Blob(recordChunks, { type: "video/webm" }), `hanh-trinh-${Date.now()}.webm`);
+    }
+  };
+  mediaRecorder.start();
+  isRecording = true;
+  els.recordBtn.classList.add("recording");
+}
+
+function initControls() {
+  els.snapshotBtn.addEventListener("click", takeSnapshot);
+  els.recordBtn.addEventListener("click", toggleRecording);
+  els.detailToggleBtn.addEventListener("click", () => {
+    state.showAllLabels = !state.showAllLabels;
+    els.detailToggleBtn.classList.toggle("active", state.showAllLabels);
+  });
+}
 
 /* ---------- Safe following distance rule ---------- */
 
@@ -102,6 +191,10 @@ function initSpeed() {
   if ("geolocation" in navigator) {
     navigator.geolocation.watchPosition(
       (pos) => {
+        // Captured regardless of speedSource: used for the dashcam-style
+        // watermark even when speed itself comes from manual entry.
+        state.lastLat = pos.coords.latitude;
+        state.lastLon = pos.coords.longitude;
         if (state.speedSource !== "gps") return;
         const mps = pos.coords.speed; // meters/second, may be null
         if (mps != null && !Number.isNaN(mps)) {
@@ -150,24 +243,52 @@ function estimateDistanceMeters(bboxWidthPx) {
   return (state.refCarWidthM * state.focalLengthPx) / bboxWidthPx;
 }
 
-function drawDetections(detections, nearest) {
+function statusOf(distance, safeDist) {
+  if (distance == null) return "unknown";
+  if (distance < safeDist * 0.7) return "danger";
+  if (distance < safeDist) return "warn";
+  return "safe";
+}
+
+const STATUS_COLOR = {
+  unknown: "#4da3ff",
+  safe: "#22d3ee",
+  warn: "#f1c40f",
+  danger: "#e74c3c",
+};
+
+function drawDetections(detections, nearest, safeDist) {
   ctx.clearRect(0, 0, els.overlay.width, els.overlay.height);
   detections.forEach((d) => {
     if (!VEHICLE_CLASSES.has(d.class)) return;
+    const isPrimary = d === nearest;
+    // Decluttered mode: only draw the tracked vehicle ahead.
+    if (!state.showAllLabels && !isPrimary) return;
+
     const [x, y, w, h] = d.bbox;
-    const isNearest = d === nearest;
-    ctx.strokeStyle = isNearest ? "#e74c3c" : "#2ecc71";
-    ctx.lineWidth = isNearest ? 4 : 2;
+    const dist = estimateDistanceMeters(w);
+    const color = STATUS_COLOR[statusOf(dist, safeDist)];
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = isPrimary ? 4 : 2;
     ctx.strokeRect(x, y, w, h);
 
-    const dist = estimateDistanceMeters(w);
-    const label = dist ? `${d.class} ~${dist.toFixed(1)}m` : d.class;
-    ctx.font = "16px sans-serif";
+    if (dist == null) return;
+    const label = `${dist.toFixed(1)}m`;
+    const fontSize = isPrimary ? 20 : 14;
+    ctx.font = `bold ${fontSize}px sans-serif`;
     const textWidth = ctx.measureText(label).width;
-    ctx.fillStyle = isNearest ? "#e74c3c" : "#2ecc71";
-    ctx.fillRect(x, Math.max(0, y - 22), textWidth + 10, 22);
-    ctx.fillStyle = "#0b0f14";
-    ctx.fillText(label, x + 5, Math.max(14, y - 6));
+    const padX = 8;
+    const boxH = fontSize + 10;
+    const boxW = textWidth + padX * 2;
+    const labelX = x + w / 2 - boxW / 2;
+    const labelY = Math.max(0, y - boxH - 4);
+
+    ctx.fillStyle = color;
+    ctx.fillRect(labelX, labelY, boxW, boxH);
+    ctx.fillStyle = "#04141a";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, labelX + padX, labelY + boxH / 2);
   });
 }
 
@@ -207,10 +328,18 @@ function setStatus(kind, text) {
   els.statusText.textContent = text;
 }
 
-function updateHud(distance, safeDist) {
+function updateReadouts(distance, safeDist) {
   els.speedValue.textContent = state.speedKmh.toFixed(0);
-  els.distValue.textContent = distance != null ? distance.toFixed(1) : "--";
-  els.safeDistValue.textContent = safeDist.toFixed(0);
+  els.primaryDistValue.textContent = distance != null ? distance.toFixed(1) : "--";
+  els.primarySafeValue.textContent = safeDist.toFixed(0);
+  els.primaryBadge.className = `primary-badge status-${statusOf(distance, safeDist)}`;
+}
+
+function updateWatermark() {
+  const ts = new Date().toISOString().replace("T", " ").substring(0, 19);
+  const lat = state.lastLat != null ? state.lastLat.toFixed(6) : "--";
+  const lon = state.lastLon != null ? state.lastLon.toFixed(6) : "--";
+  els.watermark.textContent = `${ts}  N${lat} E${lon}  ${state.speedKmh.toFixed(0)}KM/H`;
 }
 
 async function detectLoop() {
@@ -225,8 +354,15 @@ async function detectLoop() {
     const distance = nearest ? estimateDistanceMeters(nearest.bbox[2]) : null;
     const safeDist = safeDistanceMeters(state.speedKmh);
 
-    drawDetections(detections, nearest);
-    updateHud(distance, safeDist);
+    drawDetections(detections, nearest, safeDist);
+    updateReadouts(distance, safeDist);
+    updateWatermark();
+
+    if (isRecording) {
+      // Canvas is already sized by toggleRecording(); resizing it here on
+      // every frame would reset its bitmap and disrupt captureStream().
+      drawComposite();
+    }
 
     if (!state.focalLengthPx) {
       setStatus("unknown", "Chưa hiệu chuẩn — mở Cài đặt để hiệu chuẩn khoảng cách.");
@@ -301,6 +437,7 @@ function main() {
   initSpeed();
   initCalibration();
   initSettingsPanel();
+  initControls();
   registerServiceWorker();
   // Not { once: true }: a failed camera permission prompt re-enables the
   // button so the user can retry the gesture.

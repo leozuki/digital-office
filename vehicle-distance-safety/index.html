@@ -33,33 +33,42 @@
     </div>
   </div>
 
-  <header class="topbar">
-    <h1>🚗 Khoảng cách an toàn</h1>
-    <button id="settingsBtn" class="icon-btn" title="Cài đặt & Hiệu chuẩn">⚙️</button>
-  </header>
-
   <main class="stage">
     <video id="video" autoplay muted playsinline></video>
+
+    <svg id="laneGuide" class="lane-guide" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <polyline points="8,100 45,52 55,52 92,100" class="lane-edge" />
+      <polyline points="50,88 44,82 50,76 56,82 50,88" class="chevron" style="animation-delay:0s" />
+      <polyline points="50,76 44,70 50,64 56,70 50,76" class="chevron" style="animation-delay:0.25s" />
+      <polyline points="50,64 45,59 50,54 55,59 50,64" class="chevron" style="animation-delay:0.5s" />
+    </svg>
+
     <canvas id="overlay"></canvas>
 
     <div id="statusBanner" class="status-banner status-unknown">
       <span id="statusText">Đang khởi động camera...</span>
     </div>
 
-    <div class="hud">
-      <div class="hud-card">
-        <div class="hud-label">Tốc độ</div>
-        <div class="hud-value"><span id="speedValue">0</span> km/h</div>
+    <div class="side-rail left-rail">
+      <div class="speed-tile">
+        <div class="speed-value" id="speedValue">0</div>
+        <div class="speed-unit">km/h</div>
       </div>
-      <div class="hud-card">
-        <div class="hud-label">Khoảng cách đo được</div>
-        <div class="hud-value"><span id="distValue">--</span> m</div>
-      </div>
-      <div class="hud-card">
-        <div class="hud-label">Khoảng cách an toàn tối thiểu</div>
-        <div class="hud-value"><span id="safeDistValue">--</span> m</div>
-      </div>
+      <button id="snapshotBtn" class="rail-btn" title="Chụp ảnh">📷</button>
+      <button id="recordBtn" class="rail-btn" title="Quay video hành trình">⏺</button>
     </div>
+
+    <div class="side-rail right-rail">
+      <button id="settingsBtn" class="rail-btn" title="Cài đặt & Hiệu chuẩn">⚙️</button>
+      <button id="detailToggleBtn" class="rail-btn active" title="Ẩn/hiện nhãn xe phụ">👁️</button>
+    </div>
+
+    <div id="primaryBadge" class="primary-badge status-unknown">
+      <div class="primary-badge-value"><span id="primaryDistValue">--</span><span class="primary-badge-unit">M</span></div>
+      <div class="primary-badge-safe">/ <span id="primarySafeValue">--</span> M</div>
+    </div>
+
+    <div id="watermark" class="watermark"></div>
   </main>
 
   <aside id="settingsPanel" class="settings-panel hidden">
